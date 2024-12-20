@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Анализ отзывов</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Выбор периода для анализа</h1>
+        <form method="post">
+            <label for="year">Выберите год:</label>
+            <input type="number" name="year" id="year" min="2010" max="2030" step="1" placeholder="Год">
+            
+            <label for="month">Выберите месяц:</label>
+            <select name="month" id="month">
+                <option value="">Все месяцы</option>
+                <option value="1">Январь</option>
+                <option value="2">Февраль</option>
+                <option value="3">Март</option>
+                <option value="4">Апрель</option>
+                <option value="5">Май</option>
+                <option value="6">Июнь</option>
+                <option value="7">Июль</option>
+                <option value="8">Август</option>
+                <option value="9">Сентябрь</option>
+                <option value="10">Октябрь</option>
+                <option value="11">Ноябрь</option>
+                <option value="12">Декабрь</option>
+            </select>
+            <br><br>
+            <button type="submit">Показать графики</button>
+        </form>
+        {% if message %}
+            <p class="message">{{ message }}</p>
+            <a href="{{ opinions_url }}" target="_blank">Посмотреть распределение отзывов по мнениям</a>
+            <a href="{{ categories_url }}" target="_blank">Посмотреть распределение отзывов по категориям</a>
+            <a href="{{ satisfaction_index_url }}" target="_blank">Посмотреть график ИКС</a>
+        {% endif %}
+    </div>
+</body>
+</html>
