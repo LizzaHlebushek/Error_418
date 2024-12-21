@@ -35,13 +35,13 @@ def parce(url):
         name = soup.find('name')
         rating = soup.find('ratingValue')
         date = soup.find('datePublished')
-        file = open('data.txt', "r")
+        file = open('parser_data.txt', "r")
         if printfromquotes(soup, date) in file.read():
             file.close()
             return data
         print('you\'ve got mail')
         file.close()
-        file = open('data.txt', "w")
+        file = open('parser_data.txt', "w")
         file.write(fixformatting(printfromquotes(soup, date)) + "\n")
         data += (fixformatting(printfromquotes(soup, name)) + "\n")
         data += (fixformatting(printfromquotes(soup, date)) + "\n")
