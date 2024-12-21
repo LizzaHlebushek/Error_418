@@ -16,7 +16,7 @@ def run_docker_container():
     try:
         print("Running Docker container...")
         # Выполняем команду для запуска контейнера
-        subprocess.run(["docker", "run", "-d", "-p", "5432:5432", "--name", "my_postgres", "my_postgres_db"], check=True)
+        subprocess.run(["docker", "run", "-d", "-p", "5432:5432", "--name", "my_postgres2", "my_postgres_db"], check=True)
         print("Docker container started successfully.")
     except subprocess.CalledProcessError as e:
         print(f"Error while running Docker container: {e}")
@@ -36,4 +36,4 @@ def run_python_script(script_name):
 if __name__ == "__main__":
     build_docker_image()
     run_docker_container()
-    run_python_script("F.py")  # Запуск скрипта F.py
+    run_python_script("create_table2.py")  # Запуск скрипта F.py

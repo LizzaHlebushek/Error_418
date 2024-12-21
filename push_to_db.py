@@ -1,97 +1,120 @@
 import psycopg2
+from psycopg2 import sql
 import re
 
+# Параметры подключения к базе данных
 host = "localhost"  # Или IP-адрес контейнера
 port = 5432  # Порт PostgreSQL
 database = "mydatabase"  # Название вашей базы данных
 user = "myuser"  # Имя пользователя
 password = "mypassword"  # Пароль пользователя
 
-# Маппинг категорий
-category_mapping = {
-    "offer": "предложение",
-    "claim": "жалоба",
-    "gratitude": "благодарность",
-    "financial": "финансы",
-    "technical": "техническая часть",
-    "service": "персонал"
-}
+# Функция для извлечения данных из строки и добавления записи в базу данных
 
+def push_to_db(data, response):
+    add_feedback(kostil(data, response))
+def kostil(data, response):
+    # Входные данные
+    text = data
+    tags = response
 
-# Функция для вставки отзыва и категорий в базу данных
-def push_to_db(parsed_data, categories):
-    print("LETS GOOOOOOO")
-    print("IVE GOT THIS:" + parsed_data + categories)
-    # Разделение данных отзыва
-    parsed_lines = parsed_data.strip().split("\n")
+    # Обработка текста
+    lines = text.strip().split("\n", 3)  # Разделяем на строки, первые три строки — заголовок, дата-время, оценка
+    if len(lines) < 4:
+        raise ValueError("Текст должен содержать не менее 4 строк: заголовок, дата-время, оценка, текст.")
 
-    if len(parsed_lines) < 3:
-        raise ValueError("Parsed data is incomplete. Expected header, date, rating, and review text.")
+    title = lines[0].strip()
+    date_time = lines[1].strip()
+    rating = lines[2].strip()
+    body = lines[3].strip()
 
-    # Заголовок (первое поле)
-    title = parsed_lines[0].strip()
+    # Убираем лишние пробелы и символы из текста
+    body_cleaned = re.sub(r'\s+', ' ', body).strip()
+    # Формируем строку результата
+    result = f"{date_time} {rating} {title} {body_cleaned}"
 
-    # Дата и время (второе поле)
-    date_time = parsed_lines[1].strip()
+    # Обработка тегов
+    # Перевод слов в буквы
+    # Словарь для сопоставления
+    tag_names = {'A': 'claim', 'B': 'offer', 'C': 'gratitude',
+                 'D': 'technical', 'E': 'financial', 'F': 'service'}
+    tag_map = {v.lower(): k for k, v in tag_names.items()}
+    tags_list = re.split(r'[,\s.]+', tags.lower())  # Разбиваем строку тегов по запятым, пробелам и точкам
+    tags_converted = ' '.join(tag_map.get(tag.strip(), '') for tag in tags_list if tag.strip() in tag_map)
 
-    # Оценка (третье поле)
+    # Формирование строки
+    result = f"{result} {tags_converted}"
+    print(result)
+    return (result)
+
+def add_feedback(feedback_string):
+    # Разбираем строку
+    parts = feedback_string.split(' ')
+    date = parts[0] + " " + parts[1]  # Дата (2023-04-14 17:28:14)
+    rating = int(parts[2])  # Оценка (целое число от 1 до 5)
+    feedback_text = ' '.join(parts[3:])  # Комментарий (все символы после оценки)
+
+    # Тэги: A, B, C, D, E, F (оставляем только уникальные)
+    tags = set(parts[3:])  # Тэги
+    tag_names = {'A': 'жалоба', 'B': 'предложение', 'C': 'похвала',
+                 'D': 'технический', 'E': 'финансовый', 'F': 'качество персонала'}
+    tag_ids = []
+
     try:
-        rating = int(parsed_lines[2].strip())
-    except ValueError:
-        raise ValueError("Rating must be an integer between 1 and 5.")
+        # Подключение к базе данных
+        connection = psycopg2.connect(
+            host=host,
+            port=port,
+            database=database,
+            user=user,
+            password=password
+        )
+        cursor = connection.cursor()
 
-    # Текст отзыва (после третьего поля)
-    feedback_text = "\n".join(parsed_lines[3:]).strip()
-
-    # Соединение с базой данных
-    connection = psycopg2.connect(
-        host=host,
-        port=port,
-        database=database,
-        user=user,
-        password=password
-    )
-    cursor = connection.cursor()
-
-    # Вставка отзыва в таблицу feedbacks
-    cursor.execute("""
+        # Вставка отзыва в таблицу feedbacks
+        cursor.execute("""
         INSERT INTO feedbacks (feedback_text, rating, created_at)
-        VALUES (%s, %s, %s) RETURNING feedback_id
-    """, (title + "\n" + feedback_text, rating, date_time))
+        VALUES (%s, %s, %s) RETURNING feedback_id;
+        """, (feedback_text, rating, date))
 
-    # Получение feedback_id вставленной записи
-    feedback_id = cursor.fetchone()[0]
-    print("DB GAVE ME THIS ", feedback_id)
+        # Получаем ID вставленного отзыва
+        feedback_id = cursor.fetchone()[0]
 
-    # Обработка категорий
-    categories_list = re.split(r'[ ,]+', categories.strip())
-    print("categories_list", categories_list)
-    for category in categories_list:
-        # Получаем название категории на русском языке из маппинга
-        category_name = category_mapping.get(category.lower())
-        if not category_name:
-            continue
+        # Добавление тэгов в таблицу tags, если их там нет
+        for tag in tags:
+            tag_name = tag_names.get(tag)
+            if tag_name:
+                cursor.execute("""
+                INSERT INTO tags (tag_name)
+                VALUES (%s)
+                ON CONFLICT (tag_name) DO NOTHING;
+                """, (tag_name,))
 
-        # Вставка категории в таблицу tags (если её нет)
-        cursor.execute("""
-            INSERT INTO tags (tag_name)
-            VALUES (%s)
-            ON CONFLICT (tag_name) DO NOTHING
-            RETURNING tag_id
-        """, (category_name,))
+                # Получаем ID тега
+                cursor.execute("""
+                SELECT tag_id FROM tags WHERE tag_name = %s;
+                """, (tag_name,))
+                tag_id = cursor.fetchone()[0]
+                tag_ids.append(tag_id)
 
-        # Получение tag_id
-        tag_id = cursor.fetchone()[0]
-
-        # Связывание отзыва и категории
-        cursor.execute("""
+        # Связываем отзывы с тегами в таблице feedback_tags
+        for tag_id in tag_ids:
+            cursor.execute("""
             INSERT INTO feedback_tags (feedback_id, tag_id)
-            VALUES (%s, %s)
-        """, (feedback_id, tag_id))
+            VALUES (%s, %s);
+            """, (feedback_id, tag_id))
 
-    # Подтверждение изменений и закрытие соединения
-    connection.commit()
-    print("I've tryed to...")
-    cursor.close()
-    connection.close()
+        # Сохраняем изменения
+        connection.commit()
+        #print("Feedback added successfully.")
+
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        if connection:
+            cursor.close()
+            connection.close()
+
+
+
 
