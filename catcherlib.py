@@ -25,11 +25,7 @@ def fixformatting(text):
     return text
 
 def parce(url):
-        a = open('parser_data.txt', "w")
-        a.write('dfsd')
-        a.close()
         data = ''
-        sleep(1)
         req = requests.get(url)
         soup = str(BeautifulSoup(req.content, "html.parser"))
         start = soup.find('Review')
@@ -42,11 +38,11 @@ def parce(url):
         if printfromquotes(soup, date) in file.read():
             file.close()
             return data
-        print('you\'ve got mail')
+        #print('you\'ve got mail')
         file.close()
         file = open('parser_data.txt', "w")
         file.write(fixformatting(printfromquotes(soup, date)) + "\n")
-        data += (fixformatting(printfromquotes(soup, name)) + "\n")
+        data += (fixformatting(printfromquotes(soup, name)).replace('\n', '') + "\n")
         data += (fixformatting(printfromquotes(soup, date)) + "\n")
         data += (fixformatting(printfromquotes(soup, rating)) + "\n")
         data += (fixformatting(printfromquotes(soup, desc)) + "\n")

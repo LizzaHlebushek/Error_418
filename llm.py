@@ -26,7 +26,10 @@ with open(prompt_file, 'r', encoding='utf-8') as file:
 # Создаем экземпляр Ollama LLM
 llm = OllamaLLM(model="llama3")
 
-url = 'https://www.banki.ru/services/responses/bank/promsvyazbank/?page=2&type=all'
+url = 'https://www.banki.ru/services/responses/bank/promsvyazbank/?page=1&type=all'
+a = open('parser_data.txt', "w")
+a.write('dfsd')
+a.close()
 while True:
     data = catcherlib.parce(url)
     if  data != '':
