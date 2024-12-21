@@ -25,6 +25,9 @@ def fixformatting(text):
     return text
 
 def parce(url):
+        a = open('parser_data.txt', "w")
+        a.write('dfsd')
+        a.close()
         data = ''
         sleep(1)
         req = requests.get(url)
