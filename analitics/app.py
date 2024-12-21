@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request
-import pandas as pd
 from visualization import save_plot_to_html, plot_opinions, plot_categories
-from utils import load_data, filter_by_year_and_month
+from utils import load_data_opinions, load_data_categories
 import os
 import logging
 
@@ -28,14 +27,13 @@ def index():
         month = int(request.form.get('month')) if request.form.get('month') != '' else None
         
         # Загружаем данные
-        df = load_data('data/reviews.csv')
-        
-        # Фильтруем данные по выбранным параметрам
-        filtered_df = filter_by_year_and_month(df, year, month)
-        
+        df_opinion = load_data_opinions(year, month)
+        df_categories = load_data_categories(year, month)
+
+
         try:
-            save_plot_to_html(lambda: plot_opinions(filtered_df), 'opinions.html')
-            save_plot_to_html(lambda: plot_categories(filtered_df), 'categories.html')
+            save_plot_to_html(lambda: plot_opinions(df_opinion), 'opinions.html')
+            save_plot_to_html(lambda: plot_categories(df_categories), 'categories.html')
             
         except Exception as e:
             logger.error(f"Ошибка при построении графиков: {e}")
