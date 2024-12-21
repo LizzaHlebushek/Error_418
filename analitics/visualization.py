@@ -28,6 +28,7 @@ def plot_opinions(data):
         fig, ax = plt.subplots(figsize=(8, 6))
         sns.countplot(x='opinion', data=data, ax=ax)
         plt.title('Распределение отзывов по мнению')
+        #plt.close(fig)
     else:
         raise ValueError("Нет данных для построения графика.")
 
@@ -37,6 +38,7 @@ def plot_categories(data):
         fig, ax = plt.subplots(figsize=(8, 6))
         sns.countplot(x='category', hue='opinion', data=data, ax=ax)
         plt.title('Распределение отзывов по категориям')
+        #plt.close(fig)
     else:
         raise ValueError("Нет данных для построения графика.")
     
