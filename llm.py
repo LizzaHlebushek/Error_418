@@ -1,5 +1,5 @@
 from langchain_ollama import OllamaLLM
-import socket
+import catcherlib
 
 def read_and_combine_files(file1, file2):
     # Открываем первый файл и читаем его содержимое
@@ -25,15 +25,9 @@ with open(prompt_file, 'r', encoding='utf-8') as file:
 # Создаем экземпляр Ollama LLM
 llm = OllamaLLM(model="llama3")
 
-HOST = socket.gethostbyname(socket.gethostname())
-PORT = 65432
-
+url = 'https://www.banki.ru/services/responses/bank/promsvyazbank/?page=2&type=all'
 while True:
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((HOST, PORT))
-    s.listen(0)
-    conn, addr = s.accept()
-    data = conn.recv(4096).decode('UTF-8')
+    data = catcherlib.parce(url)
     if  data != '':
         print(data)
         tmp_string = [data.split('\n')[0]] + data.split('\n')[3:]
