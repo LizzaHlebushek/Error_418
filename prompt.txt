@@ -1,0 +1,16 @@
+Instruction:
+You will receive a text. Determine its category: claim, offer, or gratitude. If the text is a claim or an offer, identify the subcategory: financial, technical, or service (related to customer service and quality).
+
+Rules:
+
+Respond with one or two words only.
+First word:
+    - For a claim, respond with "claim."
+    - For an offer, respond with "offer."
+    - For gratitude, respond with "gratitude."
+Second word (only if claim or offer):
+    - For financial matters, add "financial."
+    - For technical matters, add "technical."
+    - For customer service/quality matters, add "service."
+
+Text:
