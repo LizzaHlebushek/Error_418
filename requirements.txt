@@ -2,3 +2,8 @@ pandas
 matplotlib
 seaborn
 Flask
+langchain_ollama
+bs4
+requests
+re
+psycopg2
